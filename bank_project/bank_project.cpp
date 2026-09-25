@@ -439,6 +439,8 @@ void exit()
 	//system("pause>0");
 }
 
+//
+
 void startProgram(string fileName)
 {
 	while (true)
