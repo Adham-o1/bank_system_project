@@ -436,10 +436,7 @@ void exit()
 	cout << "--------------------------------------\n";
 	cout << setw(27) << "Program Ends.\n";
 	cout << "--------------------------------------\n";
-	//system("pause>0");
 }
-
-//
 
 void startProgram(string fileName)
 {
