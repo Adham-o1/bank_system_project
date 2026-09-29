@@ -44,11 +44,20 @@ void validationNumber(int& num, int from, int to, string msg)
 	}
 }
 
-enOptions mainMenuScreen()
+int readMainMenuOption()
 {
-	enOptions option;
 	int tmp = 0;
 
+	cout << "Choose what do you want to do: [1 to 6]? ";
+	cin >> tmp;
+
+	validationNumber(tmp, 1, 6, "\nInvalid number, please enter a valid number: ");
+
+	return tmp;
+}
+
+void showMainMenu()
+{
 	system("cls");
 	cout << "============================================\n";
 	cout << right << setw(32) << "Main Menu Screen\n";
@@ -60,21 +69,18 @@ enOptions mainMenuScreen()
 	cout << "[5] Find Clients.\n";
 	cout << "[6] Exit.\n";
 	cout << "===========================================\n";
-	cout << "Choose what do you want to do: [1 to 6]? ";
-	cin >> tmp;
+}
 
-	validationNumber(tmp, 1, 6, "\nInvalid number, please enter a valid number: ");
-
-	option = (enOptions)tmp;
-
-	return option;
+enOptions showMainMenuScreen()
+{
+	showMainMenu();
+	return ((enOptions)readMainMenuOption());
 }
 
 void backToMenuScreen()
 {
-	cout << "\nPress any key to go back to main menue...";
+	cout << "\nPress any key to go back to main menu...";
 	system("pause>0");
-	//mainMenueScreen();
 }
 
 vector<string> vSplit(string str, string delim = "#//#")
@@ -100,126 +106,6 @@ vector<string> vSplit(string str, string delim = "#//#")
 	return split;
 }
 
-string joinString(vector<string>vSplit, string delim = "#//#")
-{
-	string str = "";
-
-	for (string& word : vSplit)
-	{
-		str += word + delim;
-	}
-
-	str = str.substr(0, str.length() - delim.length());
-
-	return str;
-}
-
-void showClientsList(vector<stClient> clientData)
-{
-	system("cls");
-	cout << right << setw(65) << "Number Of Clients (" << clientData.size() << ").\n";
-	cout << "-----------------------------------------------------------------------------------------------------------------------\n";
-	cout << "|" << left << setw(20) << "Account Number" << "|" << setw(25) << "Name" << "|" << setw(20) << "ID"
-		<< "|" << setw(17) << "Phone Number" << "|" << setw(15) << "PIN Code" << "|" << setw(15) << "Balance" << "|" << endl;
-	cout << "-----------------------------------------------------------------------------------------------------------------------\n";
-	for (stClient& data : clientData)
-	{
-		cout << "|" << left << setw(20) << data.accountNumber << "|" << setw(25) << data.name << "|" << setw(20) << data.id
-			<< "|" << setw(17) << data.phoneNumber << "|" << setw(15) << data.pincode << "|" << setw(15) << data.balance << "|" << endl;
-	}
-	cout << "-----------------------------------------------------------------------------------------------------------------------\n";
-}
-
-string convertToLine(stClient clientData, string separator = "#//#")
-{
-	string str = "";
-
-	str = clientData.accountNumber + separator
-		+ clientData.name + separator
-		+ clientData.id + separator
-		+ clientData.phoneNumber + separator
-		+ clientData.pincode + separator
-		+ to_string(clientData.balance);
-
-	return str;
-}
-
-void saveToFile(string fileName, stClient clientData)
-{
-	fstream myFile;
-
-	myFile.open(fileName, ios::out | ios::app);
-
-	if (myFile.is_open())
-	{
-		myFile << convertToLine(clientData) << endl;
-		myFile.close();
-	}
-}
-
-vector<stClient>uploadDataFromFileToVector(string fileName);
-
-bool isExist(string fileName, string accountNumber)
-{
-	vector<stClient> vClients = uploadDataFromFileToVector(fileName);
-	bool check = false;
-
-	for (stClient& data : vClients)
-	{
-		if (data.accountNumber == accountNumber)
-		{
-			check = true;
-		}
-	}
-
-	return check;
-}
-
-void addNewClient(string fileName)
-{
-	stClient clientData;
-	char moreClient = 'y';
-
-	while (tolower(moreClient) == 'y')
-	{
-
-		system("cls");
-		cout << "--------------------------------------\n";
-		cout << setw(30) << "Add New Client Screen\n";
-		cout << "--------------------------------------\n";
-		cout << "Adding a new client: ";
-
-		cout << "\n\nPlease enter account number: ";
-		getline(cin >> ws, clientData.accountNumber);
-
-		while (isExist(fileName, clientData.accountNumber))
-		{
-			cout << "\nClient with [" << clientData.accountNumber << "] already exists, please enter another account number: ";
-			getline(cin >> ws, clientData.accountNumber);
-		}
-
-		cout << "\nPlease enter name: ";
-		getline(cin, clientData.name);
-
-		cout << "\nPlease enter ID: ";
-		getline(cin, clientData.id);
-
-		cout << "\nPlease enter phone number: ";
-		getline(cin, clientData.phoneNumber);
-
-		cout << "\nPlease enter PIN code: ";
-		getline(cin, clientData.pincode);
-
-		cout << "\nPlease enter balance: ";
-		cin >> clientData.balance;
-
-		saveToFile(fileName, clientData);
-
-		cout << "\nClient added successfully, do you want to add more clients? [y/n]? ";
-		cin >> moreClient;
-	}
-}
-
 stClient convertLineToStruct(string line)
 {
 	vector<string> splitLine = vSplit(line);
@@ -235,11 +121,25 @@ stClient convertLineToStruct(string line)
 	return data;
 }
 
-vector<stClient>uploadDataFromFileToVector(string fileName)
+string convertStructToLine(stClient clientData, string separator = "#//#")
+{
+	string str = "";
+
+	str = clientData.accountNumber + separator
+		+ clientData.name + separator
+		+ clientData.id + separator
+		+ clientData.phoneNumber + separator
+		+ clientData.pincode + separator
+		+ to_string(clientData.balance);
+
+	return str;
+}
+
+vector<stClient> loadClientsDataFromFileToVector(string fileName)
 {
 	fstream myFile;
 	vector<stClient>vClients;
-	string line;
+	string line = "";
 
 	myFile.open(fileName, ios::in);
 
@@ -256,6 +156,131 @@ vector<stClient>uploadDataFromFileToVector(string fileName)
 	return vClients;
 }
 
+void reloadDataFromVectorToFile(string fileName, vector<stClient>vClients)
+{
+	fstream myFile;
+
+	myFile.open(fileName, ios::out);
+
+	if (myFile.is_open())
+	{
+		for (stClient& data : vClients)
+		{
+			if (!data.markToDelete)
+			{
+				myFile << convertStructToLine(data) << endl;
+			}
+		}
+		myFile.close();
+	}
+}
+
+void showClientsList(vector<stClient> clientsData)
+{
+	if (clientsData.size() == 0)
+		cout << right << setw(75) << "No Clients Available In the System!\n";
+	else
+	{
+		cout << right << setw(65) << "Number Of Clients (" << clientsData.size() << ").\n";
+		cout << "-----------------------------------------------------------------------------------------------------------------------\n";
+		cout << "|" << left << setw(20) << "Account Number" << "|" << setw(25) << "Name" << "|" << setw(20) << "ID"
+			<< "|" << setw(17) << "Phone Number" << "|" << setw(15) << "PIN Code" << "|" << setw(15) << "Balance" << "|" << endl;
+		cout << "-----------------------------------------------------------------------------------------------------------------------\n";
+
+		for (stClient& data : clientsData)
+		{
+			cout << "|" << left << setw(20) << data.accountNumber
+				<< "|" << setw(25) << data.name
+				<< "|" << setw(20) << data.id
+				<< "|" << setw(17) << data.phoneNumber
+				<< "|" << setw(15) << data.pincode
+				<< "|" << setw(15) << data.balance << "|" << endl;
+		}
+		cout << "-----------------------------------------------------------------------------------------------------------------------\n";
+	}
+}
+
+void saveClientDataToFile(string fileName, stClient clientData)
+{
+	fstream myFile;
+
+	myFile.open(fileName, ios::out | ios::app);
+
+	if (myFile.is_open())
+	{
+		myFile << convertStructToLine(clientData) << endl;
+		myFile.close();
+	}
+}
+
+bool ClientExistsByAccountNumber(string accountNumber, vector<stClient> vClients)
+{
+	for (stClient& data : vClients)
+	{
+		if (data.accountNumber == accountNumber)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void readNewClient(string fileName, vector<stClient>& vClients)
+{
+	stClient clientData;
+
+	cout << "\n\nPlease enter account number: ";
+	getline(cin >> ws, clientData.accountNumber);
+
+	while (ClientExistsByAccountNumber(clientData.accountNumber, vClients))
+	{
+		cout << "\nClient with account number [" << clientData.accountNumber << "] is already exists, please enter another account number: ";
+		getline(cin >> ws, clientData.accountNumber);
+	}
+
+	cout << "\nPlease enter name: ";
+	getline(cin, clientData.name);
+
+	cout << "\nPlease enter ID: ";
+	getline(cin, clientData.id);
+
+	cout << "\nPlease enter phone number: ";
+	getline(cin, clientData.phoneNumber);
+
+	cout << "\nPlease enter PIN code: ";
+	getline(cin, clientData.pincode);
+
+	cout << "\nPlease enter balance: ";
+	cin >> clientData.balance;
+
+	saveClientDataToFile(fileName, clientData);
+}
+
+void ShowAddNewClientsScreen()
+{
+	cout << "--------------------------------------\n";
+	cout << setw(30) << "Add New Client Screen\n";
+	cout << "--------------------------------------\n";
+	cout << "Adding a new client: ";
+}
+
+void addClients(string fileName, vector<stClient>& vClients)
+{
+	char moreClient = 'y';
+
+	while (tolower(moreClient) == 'y')
+	{
+		system("cls");
+		ShowAddNewClientsScreen();
+		readNewClient(fileName, vClients);
+		cout << "\nClient added successfully, do you want to add more clients? [y/n]? ";
+		cin >> moreClient;
+		if (tolower(moreClient) == 'y')
+			vClients = loadClientsDataFromFileToVector(fileName);
+	}
+}
+
 void showClientData(stClient clientData)
 {
 	cout << "\nThe follwing are the client data: \n";
@@ -269,82 +294,80 @@ void showClientData(stClient clientData)
 	cout << "--------------------------------------\n";
 }
 
-void markForDelete(vector<stClient>&vClients, string accountNumber)
+void markForDelete(vector<stClient>& vClients, string accountNumber)
 {
 	for (stClient& clientData : vClients)
 	{
 		if (clientData.accountNumber == accountNumber)
 		{
-			showClientData(clientData);
 			clientData.markToDelete = true;
 		}
 	}
 }
 
-void reloadDataToFile(string fileName, vector<stClient>vClients)
-{
-	fstream myFile;
-
-	myFile.open(fileName, ios::out);
-
-	if (myFile.is_open())
-	{
-		for (stClient& data : vClients)
-		{
-			if (!data.markToDelete)
-			{
-				myFile << convertToLine(data) << endl;
-			}
-		}
-		myFile.close();
-	}
-}
-
-void deleteClient(string fileName)
-{
-	string accountNumber = "";
-	vector<stClient>vClients = uploadDataFromFileToVector(fileName);
-	char check = 'n';
-
-	system("cls");
-	cout << "--------------------------------------\n";
-	cout << setw(30) << "Delete Client Screen\n";
-	cout << "--------------------------------------\n";
-
-	cout << "\nPlease enter account number: ";
-	cin >> accountNumber;
-
-	while (!isExist(fileName, accountNumber))
-	{
-		cout << "\nClient with [" << accountNumber << "] not found, please enter another account number: ";
-		getline(cin >> ws, accountNumber);
-	}
-
-	markForDelete(vClients, accountNumber);
-
-	cout << "\nAre you sure you want to delete this client? [y/n]? ";
-	cin >> check;
-
-	if (tolower(check) == 'y')
-	{
-		reloadDataToFile(fileName, vClients);
-
-		cout << "\nClient deleted successfully.\n";
-	}
-}
-
-void search(vector<stClient>vClients, string accountNumber, stClient& clientData)
+bool findClientByAccountNumber(vector<stClient>vClients, string accountNumber, stClient& clientData)
 {
 	for (stClient& data : vClients)
 	{
 		if (data.accountNumber == accountNumber)
 		{
 			clientData = data;
+			return true;
+		}
+	}
+	return false;
+}
+
+string readAccountNumber()
+{
+	string accountNumber = "";
+
+	cout << "\nPlease enter account number: ";
+	getline(cin >> ws, accountNumber);
+
+	return accountNumber;
+}
+
+void deleteClientScreen()
+{
+	cout << "--------------------------------------\n";
+	cout << setw(30) << "Delete Client Screen\n";
+	cout << "--------------------------------------\n";
+}
+
+void deleteClient(string fileName, vector<stClient>& vClients)
+{
+	string accountNumber = "";
+	char check = 'n';
+	stClient clientData;
+
+	deleteClientScreen();
+
+	accountNumber = readAccountNumber();
+
+	if (!findClientByAccountNumber(vClients, accountNumber, clientData))
+		cout << "\nClient with account number [" << accountNumber << "] is not found!\n";
+	else
+	{
+		showClientData(clientData);
+
+		cout << "\nAre you sure you want to delete this client? [y/n]? ";
+		cin >> check;
+
+		if (tolower(check) == 'y')
+		{
+			markForDelete(vClients, accountNumber);
+
+			reloadDataFromVectorToFile(fileName, vClients);
+
+			vClients = loadClientsDataFromFileToVector(fileName);
+
+			cout << "\nClient deleted successfully.\n";
 		}
 	}
 }
 
-void update(vector<stClient>&vClients, string accountNumber)
+void ChangeClientInfo(vector<stClient>& vClients, string accountNumber)
 {
 	for (stClient& data : vClients)
 	{
@@ -364,32 +387,33 @@ void update(vector<stClient>&vClients, string accountNumber)
 
 			cout << "\nPlease enter balance: ";
 			cin >> data.balance;
+			break;
 		}
 	}
 }
 
-void updateClientInfo(string fileName)
+void showUpdateClientInfoScreen()
 {
-	string accountNumber = "";
-	vector<stClient>vClients = uploadDataFromFileToVector(fileName);
-	stClient clientData;
-	char check = 'n';
-
-	system("cls");
 	cout << "--------------------------------------\n";
 	cout << setw(33) << "Update Client Info Screen\n";
 	cout << "--------------------------------------\n";
+}
 
-	cout << "\nPlease enter account number: ";
-	cin >> accountNumber;
+void updateClientInfo(string fileName, vector<stClient>& vClients)
+{
+	string accountNumber = "";
+	stClient clientData;
+	char check = 'n';
 
-	while (!isExist(fileName, accountNumber))
+	showUpdateClientInfoScreen();
+
+	accountNumber = readAccountNumber();
+
+	while (!findClientByAccountNumber(vClients, accountNumber, clientData))
 	{
-		cout << "\nClient with [" << accountNumber << "] not found, please enter another account number: ";
+		cout << "\nClient with account number [" << accountNumber << "] is not found, please enter another account number: ";
 		getline(cin >> ws, accountNumber);
 	}
-
-	search(vClients, accountNumber, clientData);
 
 	showClientData(clientData);
 
@@ -398,41 +422,36 @@ void updateClientInfo(string fileName)
 
 	if (tolower(check) == 'y')
 	{
-		update(vClients, accountNumber);
-		reloadDataToFile(fileName, vClients);
+		ChangeClientInfo(vClients, accountNumber);
+		reloadDataFromVectorToFile(fileName, vClients);
 		cout << "\nClient info updated successfully." << endl;
 	}
 }
 
-void findClient(string fileName)
+void showFindClientScreen()
 {
-	string accountNumber = "";
-	vector<stClient>vClients = uploadDataFromFileToVector(fileName);
-	stClient clientData;
-	char check = 'n';
-
-	system("cls");
 	cout << "--------------------------------------\n";
 	cout << setw(30) << "Find Client Screen\n";
 	cout << "--------------------------------------\n";
+}
 
-	cout << "\nPlease enter account number: ";
-	getline(cin >> ws, accountNumber);
+void findClient(string fileName, vector<stClient> vClients)
+{
+	string accountNumber = "";
+	stClient clientData;
 
-	while (!isExist(fileName, accountNumber))
-	{
-		cout << "\nClient with [" << accountNumber << "] not found, please enter another account number: ";
-		getline(cin >> ws, accountNumber);
-	}
+	showFindClientScreen();
 
-	search(vClients, accountNumber, clientData);
+	accountNumber = readAccountNumber();
 
-	showClientData(clientData);
+	if (findClientByAccountNumber(vClients, accountNumber, clientData))
+		showClientData(clientData);
+	else
+		cout << "\nClient with account number [" << accountNumber << "] is not found!\n";
 }
 
 void exit()
 {
-	system("cls");
 	cout << "--------------------------------------\n";
 	cout << setw(27) << "Program Ends.\n";
 	cout << "--------------------------------------\n";
@@ -442,32 +461,37 @@ void startProgram(string fileName)
 {
 	while (true)
 	{
-		vector<stClient>vClients = uploadDataFromFileToVector(clientsFileName);
-		enOptions option = mainMenuScreen();
+		vector<stClient>vClients = loadClientsDataFromFileToVector(fileName);
+		enOptions option = showMainMenuScreen();
 
 		switch (option)
 		{
 		case enOptions::ShowClientsList:
+			system("cls");
 			showClientsList(vClients);
 			backToMenuScreen();
 			break;
 		case enOptions::AddNewClient:
-			addNewClient(fileName);
+			addClients(fileName, vClients);
 			backToMenuScreen();
 			break;
 		case enOptions::DeleteClient:
-			deleteClient(fileName);
+			system("cls");
+			deleteClient(fileName, vClients);
 			backToMenuScreen();
 			break;
 		case enOptions::UpdateClient:
-			updateClientInfo(fileName);
+			system("cls");
+			updateClientInfo(fileName, vClients);
 			backToMenuScreen();
 			break;
 		case enOptions::FindClient:
-			findClient(fileName);
+			system("cls");
+			findClient(fileName, vClients);
 			backToMenuScreen();
 			break;
 		case enOptions::Exit:
+			system("cls");
 			exit();
 			return;
 		}
