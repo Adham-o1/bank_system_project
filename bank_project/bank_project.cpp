@@ -450,7 +450,7 @@ void findClient(string fileName, vector<stClient> vClients)
 		cout << "\nClient with account number [" << accountNumber << "] is not found!\n";
 }
 
-void exit()
+void exitScreen()
 {
 	cout << "--------------------------------------\n";
 	cout << setw(27) << "Program Ends.\n";
@@ -492,7 +492,7 @@ void startProgram(string fileName)
 			break;
 		case enOptions::Exit:
 			system("cls");
-			exit();
+			exitScreen();
 			return;
 		}
 	}
