@@ -19,7 +19,9 @@ enum enOptions
 	DeleteClient = 3,
 	UpdateClient = 4,
 	FindClient = 5,
-	Exit = 6
+	Transactions = 6,
+	ManageUsers = 7,
+	Logout = 8
 };
 
 enum enTransactionsOptions
@@ -76,10 +78,10 @@ int readMainMenuOption()
 {
 	int tmp = 0;
 
-	cout << "Choose what do you want to do: [1 to 6]? ";
+	cout << "Choose what do you want to do: [1 to 8]? ";
 	cin >> tmp;
 
-	validationNumber(tmp, 1, 6, "\nInvalid number, please enter a valid number: ");
+	validationNumber(tmp, 1, 8, "\nInvalid number, please enter a valid number: ");
 
 	return tmp;
 }
@@ -95,8 +97,10 @@ void showMainMenu()
 	cout << "[3] Delete Client.\n";
 	cout << "[4] Update Client Info.\n";
 	cout << "[5] Find Clients.\n";
-	cout << "[6] Exit.\n";
-	cout << "===========================================\n";
+	cout << "[6] Transactions.\n";
+	cout << "[7] Manage Users.\n";
+	cout << "[8] Logout.\n";
+	cout << "============================================\n";
 }
 
 enOptions showMainMenuScreen()
@@ -482,7 +486,265 @@ void findClient(string fileName, vector<stClient> vClients)
 void exitScreen()
 {
 	cout << "--------------------------------------\n";
-	cout << setw(27) << "Program Ends.\n";
+	cout << setw(27) << "Program Ends\n";
+	cout << "--------------------------------------" << endl;
+}
+
+void showTransactionsMenuScreen()
+{
+	system("cls");
+	cout << "============================================\n";
+	cout << right << setw(30) << "Transactions Menu" << endl;
+	cout << "============================================\n";
+	cout << "[1] Deposit.\n";
+	cout << "[2] Withdraw.\n";
+	cout << "[3] Total Balances.\n";
+	cout << "[4] Main Menu Screen.\n";
+	cout << "===========================================\n";
+}
+
+int readTransactionsMenu()
+{
+	int num = 0;
+
+	cout << "Choose what do you want to do: [1 to 4]? ";
+	cin >> num;
+
+	validationNumber(num, 1, 4, "\nInvalid number, please enter a valid number: ");
+
+	return num;
+}
+
+enTransactionsOptions transactionsMenu()
+{
+	showTransactionsMenuScreen();
+
+	return(enTransactionsOptions)readTransactionsMenu();
+}
+
+void startProgram(string fileName);
+
+void backtoTransactionsMenuScreen()
+{
+	cout << endl << "Press any key to go back to transactions menu...";
+	system("pause>0");
+}
+
+void showDepositScreen()
+{
+	cout << "--------------------------------------\n";
+	cout << setw(27) << "Deposit Screen\n";
+	cout << "--------------------------------------\n";
+}
+
+void perfromDeposit(string fileName, vector<stClient>& vClients, string accountNumber, int depositAmount)
+{
+	double newBalance = 0;
+
+	for (stClient& clientData : vClients)
+	{
+		if (clientData.accountNumber == accountNumber)
+		{
+			clientData.balance += depositAmount;
+			newBalance = clientData.balance;
+			break;
+		}
+	}
+
+	reloadDataFromVectorToFile(fileName, vClients);
+
+	cout << "\nDone successfully.\n";
+	cout << "\nNew Balance: " << newBalance << endl;
+}
+
+void depositProcess(string fileName, vector<stClient>& vClients, string accountNumber)
+{
+	int depositAmount = 0;
+
+	cout << "\nPlease enter deposit amount: ";
+	cin >> depositAmount;
+
+	char check = 'n';
+	cout << "\nAre you sure you want to perfrom this transaction? [y/n]? ";
+	cin >> check;
+
+	if (tolower(check) == 'y')
+		perfromDeposit(fileName, vClients, accountNumber, depositAmount);
+}
+
+void deposit(string fileName, vector<stClient>& vClients)
+{
+	showDepositScreen();
+
+	string accountNumber = readAccountNumber();
+
+	stClient clientData;
+
+	while (!findClientByAccountNumber(vClients, accountNumber, clientData))
+	{
+		cout << "\nClient with account number [" << accountNumber << "] does not exsit!\n";
+		accountNumber = readAccountNumber();
+	}
+
+	showClientData(clientData);
+
+	depositProcess(fileName, vClients, accountNumber);
+}
+
+void showWithdrawScreen()
+{
+	cout << "--------------------------------------\n";
+	cout << setw(27) << "Withdraw Screen\n";
+	cout << "--------------------------------------\n";
+}
+
+bool isWithdrawAmountBiggerThanBalance(vector<stClient>& vClients, string accountNumber, int withdrawAmount, int& maxWithdrawAmount)
+{
+	for (stClient& clientData : vClients)
+	{
+		if (clientData.accountNumber == accountNumber)
+		{
+			if (withdrawAmount > clientData.balance)
+			{
+				maxWithdrawAmount = clientData.balance;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+void perfromWithdraw(string fileName, vector<stClient>& vClients, string accountNumber, int withdrawAmount)
+{
+	int newBalance = 0;
+
+	for (stClient& clientData : vClients)
+	{
+		if (clientData.accountNumber == accountNumber)
+		{
+			clientData.balance -= withdrawAmount;
+			newBalance = clientData.balance;
+			break;
+		}
+	}
+
+	reloadDataFromVectorToFile(fileName, vClients);
+
+	cout << "\nDone successfully.\n";
+	cout << "\nNew Balance: " << newBalance << endl;
+}
+
+void withdrawProcess(string fileName, vector<stClient>& vClients, string accountNumber)
+{
+	int withdrawAmount = 0;
+
+	cout << "\nPlease enter withdraw amount amount: ";
+	cin >> withdrawAmount;
+
+	int maxWithdrawAmount = 0;
+
+	while (isWithdrawAmountBiggerThanBalance(vClients, accountNumber, withdrawAmount, maxWithdrawAmount))
+	{
+		cout << "\nAmount exceeds the balance, MAX[" << maxWithdrawAmount << "]!\n";
+		cout << "\nPlease enter another withdraw amount amount: ";
+		cin >> withdrawAmount;
+	}
+
+	char check = 'n';
+	cout << "\nAre you sure you want to perfrom this transaction? [y/n]? ";
+	cin >> check;
+
+	if (tolower(check) == 'y')
+		perfromWithdraw(fileName, vClients, accountNumber, withdrawAmount);
+}
+
+void withdraw(string fileName, vector<stClient>& vClients)
+{
+	showWithdrawScreen();
+
+	string accountNumber = readAccountNumber();
+
+	stClient clientData;
+
+	while (!findClientByAccountNumber(vClients, accountNumber, clientData))
+	{
+		cout << "\nClient with account number [" << accountNumber << "] does not exsit!\n";
+		accountNumber = readAccountNumber();
+	}
+
+	showClientData(clientData);
+
+	withdrawProcess(fileName, vClients, accountNumber);
+}
+
+double calcTotalBalances(vector<stClient> vClients)
+{
+	double totalBalances = 0;
+
+	for (stClient& clientData : vClients)
+	{
+		totalBalances += clientData.balance;
+	}
+
+	return totalBalances;
+}
+
+void showTotalBalances(vector<stClient> vClients)
+{
+	if (vClients.size() == 0)
+		cout << right << setw(45) << "No Clients Available In the System!\n";
+	else
+	{
+		cout << right << setw(37) << "Balances List (" << vClients.size() << ").\n";
+		cout << "----------------------------------------------------------------\n";
+		cout << "|" << left << setw(20) << "Account Number" << "|"
+			<< setw(25) << "Name" << "|" << setw(15) << "Balance" << "|" << endl;
+		cout << "----------------------------------------------------------------\n";
+
+		for (stClient& data : vClients)
+		{
+			cout << "|" << left << setw(20) << data.accountNumber
+				<< "|" << setw(25) << data.name
+				<< "|" << setw(15) << data.balance << "|" << endl;
+		}
+		cout << "----------------------------------------------------------------\n";
+	}
+	printf("\t\tTotal Balances : % .*f\n", 2, calcTotalBalances(vClients));
+}
+
+void transactions(string fileName, vector<stClient>& vClients)
+{
+	while (true)
+	{
+		enTransactionsOptions option = transactionsMenu();
+
+		switch (option)
+		{
+		case enTransactionsOptions::Deposit:
+			system("cls");
+			deposit(fileName, vClients);
+			backtoTransactionsMenuScreen();
+			break;
+		case enTransactionsOptions::Withdraw:
+			system("cls");
+			withdraw(fileName, vClients);
+			backtoTransactionsMenuScreen();
+			break;
+		case enTransactionsOptions::TotalBalances:
+			system("cls");
+			showTotalBalances(vClients);
+			backtoTransactionsMenuScreen();
+			break;
+		case enTransactionsOptions::MainMenuScreen:
+			//startProgram(fileName);
+			return;
+		}
+	}
+}
+
+void showLoginScreen()
+{
+	system("cls");
 	cout << "--------------------------------------\n";
 	cout << setw(27) << "Login Screen\n";
 	cout << "--------------------------------------" << endl;
@@ -562,150 +824,6 @@ void loginScreen(string fileName)
 	}
 }
 
-bool isWithdrawAmountBiggerThanBalance(vector<stClient>& vClients, string accountNumber, int withdrawAmount, int& maxWithdrawAmount)
-{
-	for (stClient & clientData : vClients)
-	{
-		if (clientData.accountNumber == accountNumber)
-		{
-			if (withdrawAmount > clientData.balance)
-			{
-				maxWithdrawAmount = clientData.balance;
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
-void perfromWithdraw(string fileName, vector<stClient>& vClients, string accountNumber, int withdrawAmount)
-{
-	int newBalance = 0;
-
-	for (stClient& clientData : vClients)
-	{
-		if (clientData.accountNumber == accountNumber)
-		{
-			clientData.balance -= withdrawAmount;
-			newBalance = clientData.balance;
-			break;
-		}
-	}
-
-	reloadDataFromVectorToFile(fileName, vClients);
-
-	cout << "\nDone successfully.\n";
-	cout << "\nNew Balance: " << newBalance << endl;
-}
-
-void withdrawProcess(string fileName, vector<stClient>& vClients, string accountNumber)
-{
-	int withdrawAmount = 0;
-
-	cout << "\nPlease enter withdraw amount amount: ";
-	cin >> withdrawAmount;
-
-	int maxWithdrawAmount = 0;
-
-	while (isWithdrawAmountBiggerThanBalance(vClients, accountNumber, withdrawAmount, maxWithdrawAmount))
-	{
-		cout << "\nAmount exceeds the balance, MAX[" << maxWithdrawAmount << "]!\n";
-		cout << "\nPlease enter another withdraw amount amount: ";
-		cin >> withdrawAmount;
-	}
-
-	char check = 'n';
-	cout << "\nAre you sure you want to perfrom this transaction? [y/n]? ";
-	cin >> check;
-
-	if (tolower(check) == 'y')
-		perfromWithdraw	(fileName, vClients, accountNumber, withdrawAmount);
-}
-
-void withdraw(string fileName, vector<stClient>& vClients)
-{
-	showWithdrawScreen();
-
-	string accountNumber = readAccountNumber();
-
-	stClient clientData;
-
-	while (!findClientByAccountNumber(vClients, accountNumber, clientData))
-	{
-		cout << "\nClient with account number [" << accountNumber << "] does not exsit!\n";
-		accountNumber = readAccountNumber();
-	}
-
-	showClientData(clientData);
-
-	withdrawProcess(fileName, vClients, accountNumber);
-}
-
-double calcTotalBalances(vector<stClient> vClients)
-{
-	double totalBalances = 0;
-
-	for (stClient& clientData : vClients)
-	{
-		totalBalances += clientData.balance;
-	}
-
-	return totalBalances;
-}
-
-void showTotalBalances(vector<stClient> vClients)
-{
-	if (vClients.size() == 0)
-		cout << right << setw(45) << "No Clients Available In the System!\n";
-	else
-	{
-		cout << right << setw(37) << "Balances List (" << vClients.size() << ").\n";
-		cout << "----------------------------------------------------------------\n";
-		cout << "|" << left << setw(20) << "Account Number" << "|" 
-			<< setw(25) << "Name" << "|" << setw(15) << "Balance" << "|" << endl;
-		cout << "----------------------------------------------------------------\n";
-
-		for (stClient& data : vClients)
-		{
-			cout << "|" << left << setw(20) << data.accountNumber
-				<< "|" << setw(25) << data.name
-				<< "|" << setw(15) << data.balance << "|" << endl;
-		}
-		cout << "----------------------------------------------------------------\n";
-	}
-	printf("\t\tTotal Balances : % .*f\n", 2, calcTotalBalances(vClients));
-}
-
-void transactions(string fileName, vector<stClient>& vClients)
-{
-	while (true)
-	{
-		enTransactionsOptions option = transactionsMenu();
-
-		switch (option)
-		{
-		case enTransactionsOptions::Deposit:
-			system("cls");
-			deposit(fileName, vClients);
-			backtoTransactionsMenuScreen();
-			break;
-		case enTransactionsOptions::Withdraw:
-			system("cls");
-			withdraw(fileName, vClients);
-			backtoTransactionsMenuScreen();
-			break;
-		case enTransactionsOptions::TotalBalances:
-			system("cls");
-			showTotalBalances(vClients);
-			backtoTransactionsMenuScreen();
-			break;
-		case enTransactionsOptions::MainMenuScreen:
-			startProgram(fileName);
-			return;
-		}
-	}
-}
-
 void startProgram(string fileName)
 {
 	loginScreen(usersFileName);
@@ -740,10 +858,18 @@ void startProgram(string fileName)
 			findClient(fileName, vClients);
 			backToMenuScreen();
 			break;
-		case enOptions::Exit:
-			system("cls");
-			exitScreen();
-			return;
+		case enOptions::Transactions:
+			transactions(fileName, vClients);
+			//backToMenuScreen();
+			//return;
+			break;
+		case enOptions::ManageUsers:
+			//
+			break;
+		case enOptions::Logout:
+			startProgram(clientsFileName);
+			//exitScreen();
+			//return;
 		}
 	}
 }
