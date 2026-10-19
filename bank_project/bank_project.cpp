@@ -877,5 +877,6 @@ void startProgram(string fileName)
 int main()
 {
 	startProgram(clientsFileName);
+
 	return 0;
 }
