@@ -57,6 +57,7 @@ struct stUser
 {
 	string userName = "";
 	string password = "";
+	bool markToDelete = false;
 };
 
 void validationNumber(int& num, int from, int to, string msg)
@@ -891,10 +892,262 @@ void showUsersList(vector<stUser> usersData)
 		{
 			cout << "|" << left << setw(20) << data.userName
 				 << "|" << setw(20) << data.password 
-				 << "|" << setw(20) << "permession" << "|" << endl;
+				 << "|" << setw(20) << "null" << "|" << endl;
 		}
 		cout << "----------------------------------------------------------------\n";
 	}
+}
+
+void ShowAddNewUserssScreen()
+{
+	cout << "--------------------------------------\n";
+	cout << setw(30) << "Add New User Screen\n";
+	cout << "--------------------------------------" << endl;
+	cout << "Adding a new user: ";
+}
+
+bool isUserExists(string username, vector<stUser> vUsers)
+{
+	for (stUser& data : vUsers)
+	{
+		if (data.userName == username)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+string convertUserStructToLine(stUser userData, string separator = "#//#")
+{
+	string str = "";
+
+	str = userData.userName + separator
+		+ userData.password;
+
+	return str;
+}
+
+void saveUserDataToFile(string usersFile, stUser userData)
+{
+	fstream myFile;
+
+	myFile.open(usersFile, ios::out | ios::app);
+
+	if (myFile.is_open())
+	{
+		myFile << convertUserStructToLine(userData) << endl;
+		myFile.close();
+	}
+}
+
+void readNewUser(string fileName, vector<stUser>& vUsers)
+{
+	stUser userData;
+
+	cout << "\n\nPlease enter username: ";
+	getline(cin >> ws, userData.userName);
+
+	while (isUserExists(userData.userName, vUsers))
+	{
+		cout << "\nUser with username [" << userData.userName << "] is already exists!\n";
+		cout << endl << "Please enter another username: ";
+		getline(cin >> ws, userData.userName);
+	}
+
+	cout << "\nPlease enter password: ";
+	getline(cin >> ws, userData.password);
+
+	saveUserDataToFile(fileName, userData);
+}
+
+void addUsers(string usersFile, vector<stUser>& vUsers)
+{
+	char moreUser = 'y';
+
+	while (tolower(moreUser) == 'y')
+	{
+		system("cls");
+		ShowAddNewUserssScreen();
+		readNewUser(usersFile, vUsers);
+		cout << "\nUser added successfully, do you want to add more users? [y/n]? ";
+		cin >> moreUser;
+		if (tolower(moreUser) == 'y')
+			vUsers = loadUsersDataFromFileToVector(usersFile);
+	}
+}
+
+void deleteUserScreen()
+{
+	cout << "--------------------------------------\n";
+	cout << setw(30) << "Delete User Screen\n";
+	cout << "--------------------------------------" << endl;
+}
+
+string readUserName()
+{
+	string username = "";
+
+	cout << "\nPlease enter username: ";
+	getline(cin >> ws, username);
+
+	return username;
+}
+
+bool findUserByUserName(vector<stUser>& vUsers, string userName, stUser& userData)
+{
+	for (stUser& data : vUsers)
+	{
+		if (data.userName == userName)
+		{
+			userData = data;
+			return true;
+		}
+	}
+	return false;
+}
+
+void showUserData(stUser userData)
+{
+	cout << "\nThe follwing are the user data: \n";
+	cout << "--------------------------------------\n";
+	cout << "Username: " << userData.userName << endl;
+	cout << "Password: " << userData.password<< endl;
+	cout << "--------------------------------------\n";
+}
+
+void markUserForDelete(vector<stUser>& vUsers, string userName)
+{
+	for (stUser& userData : vUsers)
+	{
+		if (userData.userName == userName)
+		{
+			userData.markToDelete = true;
+		}
+	}
+}
+
+void reloadUsersDataFromVectorToFile(string usersFile, vector<stUser>vUsers)
+{
+	fstream myFile;
+
+	myFile.open(usersFile, ios::out);
+
+	if (myFile.is_open())
+	{
+		for (stUser& data : vUsers)
+		{
+			if (!data.markToDelete)
+			{
+				myFile << convertUserStructToLine(data) << endl;
+			}
+		}
+		myFile.close();
+	}
+}
+
+void deleteUser(string userFile, vector<stUser>& vUsers)
+{
+	string username = "";
+	char check = 'n';
+	stUser userData;
+
+	deleteUserScreen();
+
+	username = readUserName();
+
+	if (!findUserByUserName(vUsers, username, userData))
+		cout << "\nUser with username [" << username << "] is not found!\n";
+	else
+	{
+		showUserData(userData);
+
+		cout << "\nAre you sure you want to delete this user? [y/n]? ";
+		cin >> check;
+
+		if (tolower(check) == 'y')
+		{
+			markUserForDelete(vUsers, username);
+
+			reloadUsersDataFromVectorToFile(userFile, vUsers);
+
+			vUsers = loadUsersDataFromFileToVector(usersFileName);
+
+			cout << "\nUser deleted successfully.\n";
+		}
+	}
+}
+
+void showUpdateUserScreen()
+{
+	cout << "--------------------------------------\n";
+	cout << setw(33) << "Update User Screen\n";
+	cout << "--------------------------------------" << endl;
+}
+
+void changeUserData(vector<stUser>& vUsers, string userName)
+{
+	for (stUser& data : vUsers)
+	{
+		if (data.userName == userName)
+		{
+			cout << "\nPlease enter password: ";
+			getline(cin >> ws, data.password);
+			break;
+		}
+	}
+}
+
+void updateUser(string usersFile, vector<stUser>& vUsers)
+{
+	string userName = "";
+	stUser userData;
+	char check = 'n';
+
+	showUpdateUserScreen();
+
+	userName = readUserName();
+
+	while (!findUserByUserName(vUsers, userName, userData))
+	{
+		cout << "\nUser with username [" << userName << "] is not found, please enter another username: ";
+		getline(cin >> ws, userName);
+	}
+
+	showUserData(userData);
+
+	cout << "\nAre you sure you want to update this user? [y/n]? ";
+	cin >> check;
+
+	if (tolower(check) == 'y')
+	{
+		changeUserData(vUsers, userName);
+		reloadUsersDataFromVectorToFile(usersFile, vUsers);
+		cout << "\nUser updated successfully." << endl;
+	}
+}
+
+void showFindUserScreen()
+{
+	cout << "--------------------------------------\n";
+	cout << setw(30) << "Find User Screen\n";
+	cout << "--------------------------------------" << endl;
+}
+
+void findUser(string usersFile, vector<stUser> vUsers)
+{
+	string userName = "";
+	stUser userData;
+
+	showFindUserScreen();
+
+	userName = readUserName();
+
+	if (findUserByUserName(vUsers, userName, userData))
+		showUserData(userData);
+	else
+		cout << "\nUser with username [" << userName << "] is not found!\n";
 }
 
 void manageUsers(string usersFile)
@@ -913,22 +1166,22 @@ void manageUsers(string usersFile)
 			break;
 		case enManageUsers::AddNewUser:
 			system("cls");
-			//
+			addUsers(usersFile, vUsers);
 			backToManageUsersMenuScreen();
 			break;
 		case enManageUsers::DeleteUser:
 			system("cls");
-			//
+			deleteUser(usersFile, vUsers);
 			backToManageUsersMenuScreen();
 			break;
 		case enManageUsers::UpdateUser:
 			system("cls");
-			//
+			updateUser(usersFile, vUsers);
 			backToManageUsersMenuScreen();
 			break;
 		case enManageUsers::FindUser:
 			system("cls");
-			//
+			findUser(usersFile, vUsers);
 			backToManageUsersMenuScreen();
 			break;
 		case enManageUsers::mainMenuScreen:
