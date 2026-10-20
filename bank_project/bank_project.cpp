@@ -875,6 +875,28 @@ void backToManageUsersMenuScreen()
 	system("pause>0");
 }
 
+void showUsersList(vector<stUser> usersData)
+{
+	if (usersData.size() == 0)
+		cout << right << setw(75) << "No Users Available In the System!\n";
+	else
+	{
+		cout << right << setw(39) << "Number Of Users (" << usersData.size() << ").\n";
+		cout << "----------------------------------------------------------------\n";
+		cout << "|" << left << setw(20) << "Username" << "|" << setw(20) << "Password" << 
+				"|" << setw(20) << "Permissions" << "|" << endl;
+		cout << "----------------------------------------------------------------\n";
+
+		for (stUser& data : usersData)
+		{
+			cout << "|" << left << setw(20) << data.userName
+				 << "|" << setw(20) << data.password 
+				 << "|" << setw(20) << "permession" << "|" << endl;
+		}
+		cout << "----------------------------------------------------------------\n";
+	}
+}
+
 void manageUsers(string usersFile)
 {
 	while (true)
@@ -886,7 +908,7 @@ void manageUsers(string usersFile)
 		{
 		case enManageUsers::UsersList:
 			system("cls");
-			//
+			showUsersList(vUsers);
 			backToManageUsersMenuScreen();
 			break;
 		case enManageUsers::AddNewUser:
