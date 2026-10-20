@@ -532,7 +532,7 @@ enTransactionsOptions transactionsMenu()
 	return(enTransactionsOptions)readTransactionsMenu();
 }
 
-void startProgram(string fileName);
+void startProgram(string clientsFile, string usersFile);
 
 void backtoTransactionsMenuScreen()
 {
@@ -818,9 +818,10 @@ stUser getUserInput()
 	return userInput;
 }
 
-void loginScreen(string fileName)
+void loginScreen(string usersFile)
 {
-	vector<stUser> vUsers = loadUsersDataFromFileToVector(fileName);
+	vector<stUser> vUsers = loadUsersDataFromFileToVector(usersFile);
+
 	showLoginScreen();
 
 	stUser userInput = getUserInput();
@@ -870,15 +871,34 @@ enManageUsers manageUsersMenu()
 
 void manageUsers()
 {
-	enManageUsers option = manageUsersMenu();
-}
-
-void startProgram(string fileName)
-{
-	loginScreen(usersFileName);
 	while (true)
 	{
-		vector<stClient>vClients = loadClientsDataFromFileToVector(fileName);
+		enManageUsers option = manageUsersMenu();
+
+		switch (option)
+		{
+		case enManageUsers::ListUsers:
+			break;
+		case enManageUsers::AddNewUser:
+			break;
+		case enManageUsers::DeleteUser:
+			break;
+		case enManageUsers::UpdateUser:
+			break;
+		case enManageUsers::FindUser:
+			break;
+		case enManageUsers::mainMenuScreen:
+			return;
+		}
+	}
+}
+
+void startProgram(string clientsFile, string usersFile)
+{
+	loginScreen(usersFile);
+	while (true)
+	{
+		vector<stClient>vClients = loadClientsDataFromFileToVector(clientsFile);
 		enOptions option = showMainMenuScreen();
 
 		switch (option)
@@ -889,26 +909,26 @@ void startProgram(string fileName)
 			backToMenuScreen();
 			break;
 		case enOptions::AddNewClient:
-			addClients(fileName, vClients);
+			addClients(clientsFile, vClients);
 			backToMenuScreen();
 			break;
 		case enOptions::DeleteClient:
 			system("cls");
-			deleteClient(fileName, vClients);
+			deleteClient(clientsFile, vClients);
 			backToMenuScreen();
 			break;
 		case enOptions::UpdateClient:
 			system("cls");
-			updateClientInfo(fileName, vClients);
+			updateClientInfo(clientsFile, vClients);
 			backToMenuScreen();
 			break;
 		case enOptions::FindClient:
 			system("cls");
-			findClient(fileName, vClients);
+			findClient(clientsFile, vClients);
 			backToMenuScreen();
 			break;
 		case enOptions::Transactions:
-			transactions(fileName, vClients);
+			transactions(clientsFile, vClients);
 			//backToMenuScreen();
 			//return;
 			break;
@@ -916,7 +936,7 @@ void startProgram(string fileName)
 			manageUsers();
 			break;
 		case enOptions::Logout:
-			startProgram(clientsFileName);
+			startProgram(clientsFile, usersFile);
 			//exitScreen();
 			//return;
 		}
@@ -925,7 +945,7 @@ void startProgram(string fileName)
 
 int main()
 {
-	startProgram(clientsFileName);
+	startProgram(clientsFileName, usersFileName);
 
 	return 0;
 }
