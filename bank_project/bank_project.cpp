@@ -34,7 +34,7 @@ enum enTransactionsOptions
 
 enum enManageUsers
 {
-	ListUsers =1,
+	UsersList =1,
 	AddNewUser = 2,
 	DeleteUser = 3,
 	UpdateUser = 4,
@@ -771,13 +771,13 @@ stUser convertLineToUserStruct(string line)
 	return data;
 }
 
-vector<stUser> loadUsersDataFromFileToVector(string fileName)
+vector<stUser> loadUsersDataFromFileToVector(string usersFile)
 {
 	fstream myFile;
 	vector<stUser>vUsers;
 	string line = "";
 
-	myFile.open(fileName, ios::in);
+	myFile.open(usersFile, ios::in);
 
 	if (myFile.is_open())
 	{
@@ -841,12 +841,12 @@ void showManageUsersMenuScreen()
 	cout << "============================================\n";
 	cout << right << setw(30) << "Manage Users Menu" << endl;
 	cout << "============================================\n";
-	cout << "[1] List Users.\n";
+	cout << "[1] Users List.\n";
 	cout << "[2] Add New User.\n";
 	cout << "[3] Delete User.\n";
 	cout << "[4] Update User.\n";
 	cout << "[5] Find User.\n";
-	cout << "[6] Main Menu.\n";
+	cout << "[6] Main Menu Screen.\n";
 	cout << "============================================\n";
 }
 
@@ -869,23 +869,45 @@ enManageUsers manageUsersMenu()
 	return(enManageUsers)readManageUsersMenu();
 }
 
-void manageUsers()
+void backToManageUsersMenuScreen()
+{
+	cout << endl << "Press any key to go back to manage users menu...";
+	system("pause>0");
+}
+
+void manageUsers(string usersFile)
 {
 	while (true)
 	{
+		vector<stUser> vUsers = loadUsersDataFromFileToVector(usersFile);
 		enManageUsers option = manageUsersMenu();
 
 		switch (option)
 		{
-		case enManageUsers::ListUsers:
+		case enManageUsers::UsersList:
+			system("cls");
+			//
+			backToManageUsersMenuScreen();
 			break;
 		case enManageUsers::AddNewUser:
+			system("cls");
+			//
+			backToManageUsersMenuScreen();
 			break;
 		case enManageUsers::DeleteUser:
+			system("cls");
+			//
+			backToManageUsersMenuScreen();
 			break;
 		case enManageUsers::UpdateUser:
+			system("cls");
+			//
+			backToManageUsersMenuScreen();
 			break;
 		case enManageUsers::FindUser:
+			system("cls");
+			//
+			backToManageUsersMenuScreen();
 			break;
 		case enManageUsers::mainMenuScreen:
 			return;
@@ -933,7 +955,7 @@ void startProgram(string clientsFile, string usersFile)
 			//return;
 			break;
 		case enOptions::ManageUsers:
-			manageUsers();
+			manageUsers(usersFile);
 			break;
 		case enOptions::Logout:
 			startProgram(clientsFile, usersFile);
