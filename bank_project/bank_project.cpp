@@ -32,6 +32,16 @@ enum enTransactionsOptions
 	MainMenuScreen = 4
 };
 
+enum enManageUsers
+{
+	ListUsers =1,
+	AddNewUser = 2,
+	DeleteUser = 3,
+	UpdateUser = 4,
+	FindUser = 5,
+	mainMenuScreen = 6
+};
+
 struct stClient
 {
 	string accountNumber = "";
@@ -824,6 +834,45 @@ void loginScreen(string fileName)
 	}
 }
 
+void showManageUsersMenuScreen()
+{
+	system("cls");
+	cout << "============================================\n";
+	cout << right << setw(30) << "Manage Users Menu" << endl;
+	cout << "============================================\n";
+	cout << "[1] List Users.\n";
+	cout << "[2] Add New User.\n";
+	cout << "[3] Delete User.\n";
+	cout << "[4] Update User.\n";
+	cout << "[5] Find User.\n";
+	cout << "[6] Main Menu.\n";
+	cout << "============================================\n";
+}
+
+int readManageUsersMenu()
+{
+	int num = 0;
+
+	cout << "Choose what do you want to do: [1 to 6]? ";
+	cin >> num;
+
+	validationNumber(num, 1, 6, "\nInvalid number, please enter a valid number: ");
+
+	return num;
+}
+
+enManageUsers manageUsersMenu()
+{
+	showManageUsersMenuScreen();
+
+	return(enManageUsers)readManageUsersMenu();
+}
+
+void manageUsers()
+{
+	enManageUsers option = manageUsersMenu();
+}
+
 void startProgram(string fileName)
 {
 	loginScreen(usersFileName);
@@ -864,7 +913,7 @@ void startProgram(string fileName)
 			//return;
 			break;
 		case enOptions::ManageUsers:
-			//
+			manageUsers();
 			break;
 		case enOptions::Logout:
 			startProgram(clientsFileName);
