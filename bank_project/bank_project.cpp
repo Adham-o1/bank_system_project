@@ -58,6 +58,7 @@ struct stUser
 	string userName = "";
 	string password = "";
 	bool markToDelete = false;
+	int permissions = 0;
 };
 
 void validationNumber(int& num, int from, int to, string msg)
@@ -768,6 +769,7 @@ stUser convertLineToUserStruct(string line)
 
 	data.userName = splitLine[0];
 	data.password = splitLine[1];
+	data.permissions = stoi(splitLine[2]);
 
 	return data;
 }
@@ -793,12 +795,13 @@ vector<stUser> loadUsersDataFromFileToVector(string usersFile)
 	return vUsers;
 }
 
-bool check(vector<stUser> vUsers, stUser userInput)
+bool check(vector<stUser> vUsers, stUser& userInput)
 {
-	for (stUser user : vUsers)
+	for (stUser& user : vUsers)
 	{
 		if (user.userName == userInput.userName && user.password == userInput.password)
 		{
+			userInput.permissions = user.permissions;
 			return true;
 		}
 	}
@@ -819,7 +822,7 @@ stUser getUserInput()
 	return userInput;
 }
 
-void loginScreen(string usersFile)
+int loginScreen(string usersFile)
 {
 	vector<stUser> vUsers = loadUsersDataFromFileToVector(usersFile);
 
@@ -834,6 +837,8 @@ void loginScreen(string usersFile)
 		cout << "Invalid username/password!\n";
 		userInput = getUserInput();
 	}
+
+	return userInput.permissions;
 }
 
 void showManageUsersMenuScreen()
@@ -892,7 +897,7 @@ void showUsersList(vector<stUser> usersData)
 		{
 			cout << "|" << left << setw(20) << data.userName
 				 << "|" << setw(20) << data.password 
-				 << "|" << setw(20) << "null" << "|" << endl;
+				 << "|" << setw(20) << data.permissions << "|" << endl;
 		}
 		cout << "----------------------------------------------------------------\n";
 	}
@@ -924,7 +929,8 @@ string convertUserStructToLine(stUser userData, string separator = "#//#")
 	string str = "";
 
 	str = userData.userName + separator
-		+ userData.password;
+		+ userData.password + separator
+		+ to_string(userData.permissions);
 
 	return str;
 }
@@ -940,6 +946,51 @@ void saveUserDataToFile(string usersFile, stUser userData)
 		myFile << convertUserStructToLine(userData) << endl;
 		myFile.close();
 	}
+}
+
+int readPermissions()
+{
+	char check = 'n';
+	int permissions = 0;
+
+	cout << "\nDo you want to give full access? [y/n]? ";
+	cin >> check;
+	if (tolower(check) == 'y')
+		permissions = -1;
+	else
+	{
+		cout << "\nDo you want to give access to:\n";
+
+		cout << "\nShow clients list? [y/n]? ";
+		cin >> check;
+		if (tolower(check) == 'y')
+			permissions += 1;
+		cout << "\nAdd new client? [y/n]? ";
+		cin >> check;
+		if (tolower(check) == 'y')
+			permissions += 2;
+		cout << "\nDelete client? [y/n]? ";
+		cin >> check;
+		if (tolower(check) == 'y')
+			permissions += 4;
+		cout << "\nUpdate client info? [y/n]? ";
+		cin >> check;
+		if (tolower(check) == 'y')
+			permissions += 8;
+		cout << "\nFind client? [y/n]? ";
+		cin >> check;
+		if (tolower(check) == 'y')
+			permissions += 16;
+		cout << "\nTransactions? [y/n]? ";
+		cin >> check;
+		if (tolower(check) == 'y')
+			permissions += 32;
+		cout << "\nManage users? [y/n]? ";
+		cin >> check;
+		if (tolower(check) == 'y')
+			permissions += 64;
+	}
+	return permissions;
 }
 
 void readNewUser(string fileName, vector<stUser>& vUsers)
@@ -958,6 +1009,8 @@ void readNewUser(string fileName, vector<stUser>& vUsers)
 
 	cout << "\nPlease enter password: ";
 	getline(cin >> ws, userData.password);
+
+	userData.permissions = readPermissions();
 
 	saveUserDataToFile(fileName, userData);
 }
@@ -1014,6 +1067,7 @@ void showUserData(stUser userData)
 	cout << "--------------------------------------\n";
 	cout << "Username: " << userData.userName << endl;
 	cout << "Password: " << userData.password<< endl;
+	cout << "Permissions: " << userData.permissions<< endl;
 	cout << "--------------------------------------\n";
 }
 
@@ -1057,6 +1111,12 @@ void deleteUser(string userFile, vector<stUser>& vUsers)
 
 	username = readUserName();
 
+	if (username == "adham")
+	{
+		cout << "\nYou cannot delete this user.\n";
+		return;
+	}
+
 	if (!findUserByUserName(vUsers, username, userData))
 		cout << "\nUser with username [" << username << "] is not found!\n";
 	else
@@ -1094,6 +1154,8 @@ void changeUserData(vector<stUser>& vUsers, string userName)
 		{
 			cout << "\nPlease enter password: ";
 			getline(cin >> ws, data.password);
+
+			data.permissions = readPermissions();
 			break;
 		}
 	}
@@ -1190,9 +1252,19 @@ void manageUsers(string usersFile)
 	}
 }
 
+void showAccessDeiedScreen()
+{
+	system("cls");
+	cout << "--------------------------------------\n";
+	cout << "Access Denied!\n";
+	cout << "You don't have permission to do this.\n";
+	cout << "Please contact your administrator.\n";
+	cout << "--------------------------------------" << endl;
+}
+
 void startProgram(string clientsFile, string usersFile)
 {
-	loginScreen(usersFile);
+	int permissions = loginScreen(usersFile);
 	while (true)
 	{
 		vector<stClient>vClients = loadClientsDataFromFileToVector(clientsFile);
@@ -1202,40 +1274,63 @@ void startProgram(string clientsFile, string usersFile)
 		{
 		case enOptions::ShowClientsList:
 			system("cls");
-			showClientsList(vClients);
+			if ((permissions & 1))
+				showClientsList(vClients);
+			else
+				showAccessDeiedScreen();
 			backToMenuScreen();
 			break;
 		case enOptions::AddNewClient:
-			addClients(clientsFile, vClients);
+			if ((permissions & 2))
+				addClients(clientsFile, vClients);
+			else
+				showAccessDeiedScreen();
 			backToMenuScreen();
 			break;
 		case enOptions::DeleteClient:
 			system("cls");
-			deleteClient(clientsFile, vClients);
+			if ((permissions & 4))
+				deleteClient(clientsFile, vClients);
+			else
+				showAccessDeiedScreen();
 			backToMenuScreen();
 			break;
 		case enOptions::UpdateClient:
 			system("cls");
-			updateClientInfo(clientsFile, vClients);
+			if ((permissions & 8))
+				updateClientInfo(clientsFile, vClients);
+			else
+				showAccessDeiedScreen();
 			backToMenuScreen();
 			break;
 		case enOptions::FindClient:
 			system("cls");
-			findClient(clientsFile, vClients);
+			if ((permissions & 16))
+				findClient(clientsFile, vClients);
+			else
+				showAccessDeiedScreen();
 			backToMenuScreen();
 			break;
 		case enOptions::Transactions:
-			transactions(clientsFile, vClients);
-			//backToMenuScreen();
-			//return;
+			if((permissions & 32))
+				transactions(clientsFile, vClients);
+			else
+			{
+				showAccessDeiedScreen();
+				backToMenuScreen();
+			}
 			break;
 		case enOptions::ManageUsers:
-			manageUsers(usersFile);
+			if((permissions & 64))
+				manageUsers(usersFile);
+			else
+			{
+				showAccessDeiedScreen();
+				backToMenuScreen();
+			}
 			break;
 		case enOptions::Logout:
 			startProgram(clientsFile, usersFile);
-			//exitScreen();
-			//return;
 		}
 	}
 }
